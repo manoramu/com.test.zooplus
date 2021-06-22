@@ -45,6 +45,8 @@ public class PetApiTest {
         photoUrls.add("c.png");
         pet.setPhotoUrls(photoUrls);
 
+        createNewPetInStore(pet);
+
         //GIVEN
         Pet result = RestAssured.given().baseUri(baseURI).contentType(ContentType.JSON).body(pet)
                 // WHEN
@@ -63,6 +65,8 @@ public class PetApiTest {
         Pet pet = getPet();
         pet.setId(-9);
 
+        createNewPetInStore(pet);
+
         //GIVEN
         RestAssured.given().baseUri(baseURI).contentType(ContentType.JSON).body(pet)
                 // WHEN
@@ -77,8 +81,7 @@ public class PetApiTest {
     public void verifyUpdatingPetToTheStoreWithNonExistingPet() {
 
         Pet pet = getPet();
-        System.out.println(pet.getId());
-        System.out.println(pet.getName());
+        createNewPetInStore(pet);
 
         //GIVEN
         RestAssured.given().baseUri(baseURI).contentType(ContentType.JSON).body(pet)
@@ -94,15 +97,16 @@ public class PetApiTest {
     public void verifyUpdatingThePetWithFormData() {
 
         Pet pet = getPet();
+        createNewPetInStore(pet);
 
         //GIVEN
         RestAssured.given().baseUri(baseURI).accept(ContentType.JSON).contentType("application/x-www-form-urlencoded")
-                .formParam("name", faker.name().firstName())
-                .formParam("status", "sold").log().all()
+                .formParam("name", pet.getName())
+                .formParam("status", "sold")
                 // WHEN
                 .when().post("/pet/" + pet.getId())
                 // THEN
-                .then().assertThat().statusCode(200).log().all();
+                .then().assertThat().statusCode(200);
     }
 
     @Test
@@ -110,6 +114,7 @@ public class PetApiTest {
     public void verifyUpdatingThePetWithFormDataAndInvalidInput() {
 
         Pet pet = getPet();
+        createNewPetInStore(pet);
 
         //GIVEN
         RestAssured.given().baseUri(baseURI).accept(ContentType.JSON).contentType("application/x-www-form-urlencoded")
@@ -162,8 +167,11 @@ public class PetApiTest {
     }
 
     @Test
-    @Description("Verify retrieving of the pet with valid and invalid id")
+    @Description("Verify retrieving of the pet with invalid id")
     public void verifyRetrievalOfsPetsByInvalidId() {
+
+        Pet pet = getPet();
+        createNewPetInStore(pet);
 
         //GIVEN
         RestAssured.given().baseUri(baseURI)
@@ -175,19 +183,18 @@ public class PetApiTest {
     }
 
     @Test
-    @Description("Verify retrieving of the pet with valid and invalid id")
+    @Description("Verify retrieving of the pet with valid id")
     public void verifyRetrievalOfsPetsByValidId() {
 
-        System.out.println("verifyRetrievalOfsPetsByValidId");
-
         Pet pet = getPet();
+        createNewPetInStore(pet);
 
         //GIVEN
         RestAssured.given().baseUri(baseURI)
                 // WHEN
                 .when().get("/pet/" + pet.getId())
                 // THEN
-                .then().assertThat().statusCode(200).log().ifValidationFails();
+                .then().assertThat().statusCode(200);
 
     }
 
@@ -195,11 +202,10 @@ public class PetApiTest {
     @Test
     public void verifyUploadOfImage() {
 
-        System.out.println("verifyImageUpload");
-
         File testUploadFile = new File("src/main/resources/Sample-png-Image-for-Testing.png");
 
         Pet pet = getPet();
+        createNewPetInStore(pet);
 
         //GIVEN
         RestAssured.given().baseUri(baseURI).accept(ContentType.JSON)
@@ -229,6 +235,7 @@ public class PetApiTest {
     public void verifyDeletionOfPetWithValidId() {
 
         Pet pet = getPet();
+        createNewPetInStore(pet);
 
         //GIVEN
         RestAssured.given().baseUri(baseURI)
@@ -280,6 +287,14 @@ public class PetApiTest {
         Pet pet = Pet.builder().id(testPetId).category(categoryMap).name(testName)
                 .photoUrls(photoUrls).tags(tagMap).status("available").build();
         return pet;
+    }
+
+    private void createNewPetInStore(Pet pet) {
+        RestAssured.given().baseUri(baseURI).contentType(ContentType.JSON).body(pet)
+                // WHEN
+                .when().post("/pet")
+                // THEN
+                .then().assertThat().statusCode(200);
     }
 
 
